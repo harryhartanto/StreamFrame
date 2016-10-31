@@ -17,7 +17,6 @@ function connectDB()
 		die("Connection failed: " . mysqli_connect_error());
 	}
 	//echo "Connected successfully";
-
 }
 
 function closeDB()
@@ -91,7 +90,6 @@ function modifyTaskParent($modifyTaskID,$parentTaskID)
 			echo " is Failed!";
 		}
 	}
-
 	closeDB();
 }
 
@@ -127,11 +125,17 @@ function checkDownTree($modifyTaskID,$parentTaskID)
 		}
 }
 
-function showFlatList()
+function showFlatList($status)
 {
 	global $conn;
 	connectDB();
-	$sql = "select id, title, status, parent_id from tasks";
+	$sql = "select id, title, status, parent_id from tasks ";
+	$condition = "";
+	if($status!='99')
+	{
+		$condition = "where status=".$status;
+	}
+	$sql .=$condition;
 	$result = mysqli_query($conn,$sql);
 	$finalResult = "<ul>";
 	$status = "";		//IN PROGRESS / DONE / COMPLETED
@@ -139,30 +143,150 @@ function showFlatList()
 	{
 		while($row = mysqli_fetch_assoc($result))
 		{
-				$checked = "checked";
-				if($row["status"]==0)
-				{
-					$status = "IN PROGRESS";
-					$checked = "";
-				}
-				else if($row["status"]==1)
-				{
-					$status = "DONE";
-				}
-				else
-				{
-					$status = "COMPLETED";
-				}
-				$finalResult .="<li>[".$row["id"]."] ".$row["title"]." <input type='checkbox' name='status' value='".$row["id"]."' ".$checked.">- ".$status."</li>";
+			$checked = "checked";
+			$status = translateStatus($row["status"]);
+			if($status=="IN PROGRESS")
+			{
+				$checked ="";
+			}
+			$finalResult .="<li>[".$row["id"]."] ".$row["title"]." <input onclick='changeStatus(this)' type='checkbox' name='status' value='".$row["id"]."-".$row["status"]."' ".$checked.">- ".$status."</li>";
 		}
 		$finalResult .= "</ul>";
 		echo $finalResult;
 	}
 	else //nothing to show
 	{
-		echo "EMPTY";
+		$finalResult .= "NOTHING TO SHOW</ul>";
+		echo $finalResult;
 	}
 	closeDB();
+}
+
+function updateTaskStatus($id,$status)
+{
+	global $conn;
+	connectDB();
+	$sql = "update tasks set status = ".$status." where id = ".$id;	
+	$result = mysqli_query($conn,$sql);
+	if ($result)
+	{
+		echo "Sucessfully Updated!";
+	}
+	else
+	{
+		echo "Failed!";
+	}
+	closeDB();
+}
+
+function showNestedHierarchyList($status)
+{
+	global $conn;
+	connectDB();
+	$sql = "select id, title, status, parent_id from tasks where parent_id=0";
+	//$condition = "";
+	//if($status!='99')
+	//{
+	//	$condition = "where status=".$status;
+	//}
+	//$sql .=$condition;
+	$result = mysqli_query($conn,$sql);
+	$finalResult = "";
+	$tempResult = "";
+	if (mysqli_num_rows($result) > 0)
+	{
+		while($row = mysqli_fetch_assoc($result))
+		{
+			$output = checkNestedList($row["id"],$row["title"],$row["status"],$row["parent_id"]);					
+			$arrOutput = explode("|",$output);
+			$tempResult .=$arrOutput[3];			
+		}
+		$finalResult .= $tempResult;
+		echo $finalResult;
+	}
+	else //nothing to show
+	{
+		$finalResult .= "NOTHING TO SHOW";
+		echo $finalResult;
+	}
+	closeDB();
+}
+
+function checkNestedList($id, $title, $status, $parent_id)
+{
+	global $conn;
+	$sql = "select id, title, status, parent_id from tasks where parent_id=".$id;
+	$finalResult = "";	
+	$tempResult ="";
+	$countDependencies= 0;
+	$countDone= 0;
+	$countComplete= 0;
+	$result = mysqli_query($conn,$sql);
+	if (mysqli_num_rows($result) > 0)
+	{
+		while($row = mysqli_fetch_assoc($result))
+		{
+			$output = checkNestedList($row["id"],$row["title"],$row["status"],$row["parent_id"]);
+			$arrOutput = explode("|",$output);
+			$countDependencies++;
+			$countDependencies += $arrOutput[0];
+			$countDone += $arrOutput[1];
+			$countComplete += $arrOutput[2];
+			$tempResult .=$arrOutput[3];
+		}
+		$checked = "checked";
+		$statusValue = translateStatus($status);
+		if($statusValue=="IN PROGRESS")
+		{
+			$checked ="";
+		}	
+		if($status=='1')
+		{
+			$countDone++;
+		}
+		if($status=='2')
+		{
+			$countComplete++;
+		}
+		$finalResult .="<li>[".$id."] ".$title." (Total Dependencies = ".$countDependencies.", Total Done = ".$countDone.", Total Completed = ".$countComplete.") <input onclick='changeStatus(this)' type='checkbox' name='status' value='".$id."-".$status."' ".$checked.">- ".$statusValue."</li>";
+		$finalResult .="<ul>".$tempResult."</ul>";
+		return $countDependencies."|".$countDone."|".$countComplete."|".$finalResult;
+	}
+	else //not a parent task
+	{		
+		if($status=='1')
+		{
+			$countDone++;
+		}
+		if($status=='2')
+		{
+			$countComplete++;
+		}
+		
+		$checked = "checked";
+		$statusValue = translateStatus($status);
+		if($statusValue=="IN PROGRESS")
+		{
+			$checked ="";
+		}
+		return $countDependencies."|".$countDone."|".$countComplete."|<li>[".$id."] ".$title." <input onclick='changeStatus(this)' type='checkbox' name='status' value='".$id."-".$status."' ".$checked.">- ".$statusValue."</li>";
+	}
+}
+
+function translateStatus($status)
+{
+	if($status==0)
+	{
+		return "IN PROGRESS";
+	}
+	else if($status==1)
+	{
+		return "DONE";
+	}
+	else
+	{
+		return "COMPLETED";
+	}
 }
 
 $action = $_REQUEST['action'];
@@ -186,7 +310,19 @@ switch ($action) {
 		break;
 
 	case "SHOW_FLAT_LIST":
-		return showFlatList();
+		$status=$_REQUEST['status'];
+		return showFlatList($status);
+		break;
+	
+	case "SHOW_NESTED_LIST":
+		$status=$_REQUEST['status'];
+		return "".showNestedHierarchyList($status);
+		break;
+	
+	case "UPDATE_TASK_STATUS":
+		$id=$_REQUEST['id'];
+		$status=$_REQUEST['status'];
+		return updateTaskStatus($id,$status);
 		break;
 
 	default:

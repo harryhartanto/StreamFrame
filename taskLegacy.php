@@ -4,7 +4,6 @@
 </head>
 <body>
 	<div id="createTaskForm">
-
 	  <table border = '0' id='createForm' name='createForm' >
 		<thead>
 		<tr>
@@ -16,23 +15,40 @@
 			<td>Modify Task Name: </td>
 			<!--td><input type="text" name="modifyTask" id="modifyTask"></td-->
 			<td>
-			<select name="modifyTask" id="modifyTask" onchange="refreshParentID()">
+				<select name="modifyTask" id="modifyTask" onchange="refreshParentID()">
 			</td>
 			<td id="infoModify"></td>
 		</tr>
 		<tr>
 			<td>Parent Task ID: </td>
 			<td>
-			<select name="parentTaskID" id="parentTaskID">
+				<select name="parentTaskID" id="parentTaskID">
 			</td>
 		</tr>
 		<tr>
 			<td><input type="button" id="submitBtn" value="Submit"></td>
 			<td><input type="button" id="test" value="Test" ></td>
 		</tr>
-	</table>
-</div>
-<div id="listTaskView"></div>
+		</table>
+	</div>
+	<div id="listOfTasks"><div ></div>
+		  <table border = '0' id='filterView' name='filterView' >
+			<thead>
+			<tr>
+				<td>Filter : 
+				<select name="filterStatus" id="filterStatus" onchange="filterStatus()">
+					<option value='99'>ALL</option>
+					<option value='0'>IN PROGRESS</option>
+					<option value='1'>DONE</option>
+					<option value='2'>COMPLETE</option>
+				</td>
+			</tr>
+			<tr>
+				<td id="listTaskView"></td>
+			</tr>
+		</table>
+	</div>
+	
 </body>
 <script>
 
@@ -75,9 +91,9 @@ $(document).ready(function()
 					},
 					function(data, status)
 					{
-						// $("#infoModify").text(selectedModifyTaskName+" "+data);
-						// $("#infoModify").fadeOut(5000);
-						alert(selectedModifyTaskName+" "+data);
+						$("#infoModify").text(selectedModifyTaskName+" "+data);
+						$("#infoModify").fadeOut(5000);
+						//alert(selectedModifyTaskName+" "+data);
 						refreshListOfTask();
 						// alert("Data: " + data + "\nStatus: " + status);
 					}
@@ -134,20 +150,25 @@ $(document).ready(function()
 				$("#parentTaskID").html(data);
 				$("#modifyTask").html(data);
 			}
-		);
+		);		
+		
+		refreshListViewTask();
+	}
+});
 
-		$.post("connection.php",
+function refreshListViewTask()
+{
+	$.post("connection.php",
 			{
-				action: 'SHOW_FLAT_LIST'
+				action: 'SHOW_NESTED_LIST',
+				status: '99'			//ALL
 			},
 			function(data, status)
 			{
 				$("#listTaskView").html(data);
 			}
 		);
-	}
-
-});
+}
 function refreshParentID()
 {
 	var selectedModifyTask = $("#modifyTask").val();
@@ -161,6 +182,52 @@ function refreshParentID()
 			$("#parentTaskID").html(data);
 		}
 	);
+}
+
+function filterStatus()
+{
+	var selectedFilterStatus = $("#filterStatus").val();
+	$.post("connection.php",
+		{
+			action: 'SHOW_FLAT_LIST',
+			status: selectedFilterStatus
+		},
+		function(data, status)
+		{
+			$("#listTaskView").html(data);
+		}
+	);
+}
+
+function updateStatus(selectedID, selectedStatus)
+{
+	$.post("connection.php",
+		{
+			action: 'UPDATE_TASK_STATUS',
+			id: selectedID,
+			status: selectedStatus
+		},
+		function(data, status)
+		{
+			if(status=="success")
+			{
+				refreshListViewTask();
+			}			
+		}
+	);
+}
+
+function changeStatus(checkBox) {
+  var temp = checkBox.value;
+  var arrValue = temp.split("-");
+  if(checkBox.checked==true)
+  {
+	  updateStatus(arrValue[0],1); 		//update to DONE
+  }
+  else
+  {
+	  updateStatus(arrValue[0],0);		//update to IN PROGRESS
+  }
 }
 </script>
 </html>

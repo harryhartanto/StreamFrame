@@ -1,0 +1,39 @@
+@brand-primary:  #337ab7;
+@brand-success: #5cb85c;
+@brand-info:    #5bc0de;
+@brand-warning: #f0ad4e;
+@brand-danger:  #d9534f;
+
+li
+{
+	margin: 0 0 10px 0;
+}
+
+#statusValueID
+{	
+	border-radius: 5px;
+    background: #f0ad4e;
+    padding: 5px;
+    width: 110px;
+    height: 20px;
+
+}
+
+#modifyTask #parentTaskID
+{	
+	min-width: 500px;
+    max-width: 500px;
+}
+
+#taskForm
+{	
+    float: center;
+    width: 50%;
+    padding: 10px;
+}
+
+#listTasks
+{
+    width: 100%;
+    padding: 10px;
+}

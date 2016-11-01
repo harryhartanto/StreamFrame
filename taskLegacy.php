@@ -10,48 +10,62 @@
 	<div id="taskForm">
 		<div class="panel panel-default">
 			<div class="panel-heading">
-				
-				<h3 class="panel-title"><span class="glyphicon glyphicon-file"></span>Task Form</b></h3>
+				<h3 class="panel-title"><span class="glyphicon glyphicon-file"></span> <b>Task Form</b></h3>
 			</div>
-			<div class="panel-body" style="font-size:13px;font-weight:normal;text-align:justify;">						  
-			  <table border = '0' id='createForm' name='createForm' >
-				<thead>
-				<tr>
-					<td>New Task Name:</td>
-					<td><input class="form-control" type="text" name="newTaskName" id="newTaskName"></td>
-					<td id="info"></td>
-				</tr>
-				<tr>
-					<td>Modify Task Name: </td>
-					<td>
-						<select  class="form-control" name="modifyTask" id="modifyTask" onchange="refreshParentID()"></select>
-					</td>
-					<td id="infoModify"></td>
-				</tr>
-				<tr>
-					<td>Parent Task ID: </td>
-					<td>
-						<select class="form-control" name="parentTaskID" id="parentTaskID"></select>
-					</td>
-				</tr>
-				<tr>
-					<td><button class="btn btn-success" type="button" id="submitBtn" value="Submit">Submit</button></td>
-				</tr>
-				</table>
+			<div class="panel-body" id='taskFormDiv' style="font-size:13px;font-weight:normal;text-align:justify;">
+
+        <form class="form-horizontal" id='createFormView' name='createFormView' >
+        <div class="form-group" id="newTaskNameDiv">
+          <label  class="control-label col-sm-2">New Task Name:</label>
+          <div class="col-sm-10">
+            <input class="form-control" type="text" name="newTaskName" id="newTaskName">
+          </div>
+        </div>
+        <div class="form-group" id="modifyTaskDiv">
+          <label  class="control-label col-sm-2">Modify Task: </label>
+          <div class="col-sm-10">
+            <select name="modifyTask" id="modifyTask" onchange="refreshParentID()"></select>
+          </div>
+        </div>
+        <div class="form-group" id="parentTaskIDDiv">
+          <label  class="control-label col-sm-2">Parent Task ID: </label>
+          <div class="col-sm-10">
+            <select name="parentTaskID" id="parentTaskID"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-12">
+            <button class="btn btn-success" type="button" id="submitBtn" value="Submit">Submit</button>
+          </div>
+        </div>
+        </form>
+
 			</div>
 		</div>
 	</div>
+
+  <div id="logPanel">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title"><span class="glyphicon glyphicon-book"></span> <b>Log</b></h3>
+			</div>
+			<div class="panel-body" id='logPanelDiv' style="font-size:13px;font-weight:normal;text-align:justify;">
+			  <textarea readonly rows="10" cols="120" id='logArea'></textarea>
+			</div>
+		</div>
+	</div>
+
 	<div id="listTasks">
 		<div class="panel panel-default">
 			<div class="panel-heading">
-				<h3 class="panel-title"><span class="glyphicon glyphicon-tasks"></span> List Of Tasks</b></h3>
+				<h3 class="panel-title"><span class="glyphicon glyphicon-tasks"></span> <b>List Of Tasks</b></h3>
 			</div>
 			<div id="listOfTasks" class="panel-body" style="font-size:13px;font-weight:normal;text-align:justify;">
 				  <form class="form-horizontal" id='filterView' name='filterView' >
-					<div class="form-group">								  
+					<div class="form-group" id="filterStatusDiv">
 					  <div class="col-sm-12">
-						<span class="glyphicon glyphicon-filter"></span>
-						<select class="form" name="filterStatus" id="filterStatus" onchange="filterStatus()">
+						<h class="glyphicon glyphicon-filter"></h>
+						<select name="filterStatus" id="filterStatus" onchange="refreshListViewTask()">
 							<option value='99'>ALL</option>
 							<option value='0'>IN PROGRESS</option>
 							<option value='1'>DONE</option>
@@ -67,11 +81,12 @@
 				</form>
 			</div>
 		</div>
-		
+
 	</div>
-	
+
 </body>
 <script>
+
 
 $(document).ready(function()
 {
@@ -83,10 +98,12 @@ $(document).ready(function()
 			if(!temp.trim())
 			{
 				$("#modifyTask").removeAttr('disabled');
+  			$("#modifyTask").css("color", "white");
 			}
 			else
 			{
 				$("#modifyTask").attr('disabled','disabled');
+  			$("#modifyTask").css("color", "black");
 			}
 		}
 	);
@@ -94,10 +111,6 @@ $(document).ready(function()
 	$("#submitBtn").click(
 		function()
 		{
-			$("#info").text("");
-			$("#info").fadeIn(0);
-			$("#infoModify").text("");
-			$("#infoModify").fadeIn(0);
 			var newTaskName=$("#newTaskName").val();
 			var selectedParentTaskID = $("#parentTaskID").val();
 			if(!newTaskName.trim())				//insert action
@@ -114,8 +127,8 @@ $(document).ready(function()
 					},
 					function(data, status)
 					{
-						$("#infoModify").text(selectedModifyTaskName+" "+data);
-						$("#infoModify").fadeOut(5000);
+            var message =selectedModifyTaskName+" "+data;
+						updateLogArea(message);
 						//alert(selectedModifyTaskName+" "+data);
 						refreshListOfTask();
 					}
@@ -123,8 +136,8 @@ $(document).ready(function()
 				}
 				else
 				{
-					$("#infoModify").text("Please select one of the task to be modified.");
-					$("#infoModify").fadeOut(5000);
+          var message ="Please select one of the task to be modified.";
+          updateLogArea(message);
 				}
 			}
 			else 							   //modify action
@@ -139,8 +152,9 @@ $(document).ready(function()
 					{
 						$("#newTaskName").val("");
 						$("#modifyTask").removeAttr('disabled');
-						$("#info").text(newTaskName+" "+data);
-						$("#info").fadeOut(5000);
+      			$("#modifyTask").css("color", "white");
+            var message =newTaskName+" "+data;
+            updateLogArea(message);
 						refreshListOfTask();
 					}
 				);
@@ -148,9 +162,9 @@ $(document).ready(function()
 		}
 	);
 
-
 });
 
+//refresh both dropdown modifyTask & parentTaskID
 function refreshListOfTask()
 {
 	$.post("function.php",
@@ -163,24 +177,27 @@ function refreshListOfTask()
 			$("#parentTaskID").html(data);
 			$("#modifyTask").html(data);
 		}
-	);		
-	
+	);
 	refreshListViewTask();
 }
 
+//refresh the view of List Task
 function refreshListViewTask()
 {
-	$.post("function.php",
-			{
-				action: 'SHOW_NESTED_LIST',
-				status: '99'			//ALL
-			},
-			function(data, status)
-			{
-				$("#listTaskView").html(data);
-			}
-		);
+  var selectedFilterStatus = $("#filterStatus").val();
+  $.post("function.php",
+    {
+      action: 'SHOW_NESTED_LIST',
+      status: selectedFilterStatus
+    },
+    function(data, status)
+    {
+      $("#listTaskView").html(data);
+    }
+  );
 }
+
+//refresh dropdown parentTaskID to remove the selected modifyTask
 function refreshParentID()
 {
 	var selectedModifyTask = $("#modifyTask").val();
@@ -196,21 +213,21 @@ function refreshParentID()
 	);
 }
 
-function filterStatus()
-{
-	var selectedFilterStatus = $("#filterStatus").val();
-	$.post("function.php",
-		{
-			action: 'SHOW_FLAT_LIST',
-			status: selectedFilterStatus
-		},
-		function(data, status)
-		{
-			$("#listTaskView").html(data);
-		}
-	);
+//update status when mark/unmark status
+function changeStatus(checkBox) {
+  var temp = checkBox.value;
+  var arrValue = temp.split("-");
+  if(checkBox.checked==true)
+  {
+	  updateStatus(arrValue[0],2); 		//update to COMPLETED
+  }
+  else
+  {
+	  updateStatus(arrValue[0],0);		//update to IN PROGRESS
+  }
 }
 
+//update status of the task and refresh the view of list task
 function updateStatus(selectedID, selectedStatus)
 {
 	$.post("function.php",
@@ -224,23 +241,12 @@ function updateStatus(selectedID, selectedStatus)
 			if(status=="success")
 			{
 				refreshListViewTask();
-			}			
+			}
 		}
 	);
 }
 
-function changeStatus(checkBox) {
-  var temp = checkBox.value;
-  var arrValue = temp.split("-");
-  if(checkBox.checked==true)
-  {
-	  updateStatus(arrValue[0],2); 		//update to COMPLETED
-  }
-  else
-  {
-	  updateStatus(arrValue[0],0);		//update to IN PROGRESS
-  }
-}
+//rename the title of task
 function changeTitle(header,e, selectedID)
 {
 	var newTaskName = header.innerHTML;
@@ -257,11 +263,26 @@ function changeTitle(header,e, selectedID)
 			if(status=="success")
 			{
 				refreshListOfTask();
-			}			
+			}
 		}
 		);
-		
 	}
+}
+
+//append the log by result information
+function updateLogArea(message)
+{
+
+  var logArea = document.getElementById('logArea');
+  var tempLog = logArea.value;
+
+  if(tempLog!="")
+  {
+    tempLog +='\n';
+  }
+  tempLog+=message;
+  logArea.value=tempLog;
+  logArea.scrollTop = logArea.scrollHeight;
 }
 </script>
 </html>

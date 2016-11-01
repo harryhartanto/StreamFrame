@@ -1,39 +1,156 @@
-@brand-primary:  #337ab7;
-@brand-success: #5cb85c;
-@brand-info:    #5bc0de;
-@brand-warning: #f0ad4e;
-@brand-danger:  #d9534f;
-
-li
-{
-	margin: 0 0 10px 0;
-}
-
-#statusValueID
-{	
-	border-radius: 5px;
-    background: #f0ad4e;
-    padding: 5px;
-    width: 110px;
-    height: 20px;
-
-}
-
-#modifyTask #parentTaskID
-{	
-	min-width: 500px;
-    max-width: 500px;
-}
-
+/*Style for Task Form*/
 #taskForm
-{	
-    float: center;
+{
+	  position: absolute;
+    width: 50%;
+		top: 4px;
+    padding: 10px;
+}
+
+#taskFormDiv
+{
+	background-color:	#778899;
+}
+
+#modifyTask, #parentTaskID, #newTaskName
+{
+		min-width: 500px;
+    max-width: 500px;
+		height:30px;
+		border-radius: 5px;
+		background-color: #808080;
+		color : white;
+}
+
+/*Style for Log Panel*/
+textarea
+{
+	resize:none;
+}
+
+#logPanelDiv
+{
+	background-color:#778899;
+}
+
+#logPanel
+{
+	  position: absolute;
+		right:16px;
+		top: 4px;
     width: 50%;
     padding: 10px;
 }
 
+/*Style for List of Task View*/
+.glyphicon.glyphicon-filter {
+    font-size: 25px;
+		color:#808080;
+}
+#filterStatusDiv
+{
+	color:black;
+}
+#filterStatus
+{
+		min-width: 150px;
+    max-width: 150px;
+		height:25px;
+		border-radius: 5px;
+		background-color: #808080;
+		color : white;
+}
+
+
 #listTasks
 {
+		position: absolute;
+		top:30%;
     width: 100%;
     padding: 10px;
+}
+
+#listOfTasks
+{
+	background-color: #2F4F4F;
+	color:white;
+}
+
+li
+{
+	margin: 0 0 10px 0;
+	cursor:default;
+}
+
+#statusValue0
+{
+	border-radius: 5px;
+  background: #f0ad4e;
+  padding: 5px;
+  width: 110px;
+  height: 20px;
+	color:white;
+}
+
+#statusValue0Filtered
+{
+	border-radius: 5px;
+  background: #f0ad4e;
+  padding: 5px;
+  width: 110px;
+  height: 20px;
+	color:white;
+	opacity: 0.5;
+}
+
+#statusValue1
+{
+	border-radius: 5px;
+  background: #5bc0de;
+  padding: 5px;
+  width: 110px;
+  height: 20px;
+	color:white;
+}
+
+#statusValue1Filtered
+{
+	border-radius: 5px;
+  background: #5bc0de;
+  padding: 5px;
+  width: 110px;
+  height: 20px;
+	color:white;
+	opacity: 0.5;
+}
+
+#statusValue2
+{
+	border-radius: 5px;
+  background: #5cb85c;
+  padding: 5px;
+  width: 110px;
+  height: 20px;
+	color:white;
+}
+
+#statusValue2Filtered
+{
+	border-radius: 5px;
+  background: #5cb85c;
+  padding: 5px;
+  width: 110px;
+  height: 20px;
+	color:white;
+	opacity: 0.5;
+}
+
+#checkBoxStat
+{
+		cursor:pointer;
+}
+
+#editableTaskName
+{
+	cursor:auto;
 }

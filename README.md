@@ -21,7 +21,7 @@ How to rename the task name:
 
 This application created with assumptions below:
  - Parent Task cannot change its status from DONE/COMPLETED into IN PROGRESS, hence the user can't unmark the checkbox at Parent Task level.
-   Reason : if able to change the status, what happened to its children if the Status of the parent is COMPLETED and unmark into DONE? which children need to update into IN PROGRESS?
-  - When you filtered to certain status, you still can see and unmark/mark the other's status.
+   Reason : because parent's status cannot revert from DONE into IN PROGRESS.
+ - When you filtered to certain status, you still can see and unmark/mark the other's status.
 
 Thank You!

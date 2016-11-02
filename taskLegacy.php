@@ -98,12 +98,12 @@ $(document).ready(function()
 			if(!temp.trim())
 			{
 				$("#modifyTask").removeAttr('disabled');
-  			$("#modifyTask").css("color", "white");
+				$("#modifyTask").css("color", "white");
 			}
 			else
 			{
 				$("#modifyTask").attr('disabled','disabled');
-  			$("#modifyTask").css("color", "black");
+				$("#modifyTask").css("color", "black");
 			}
 		}
 	);
@@ -127,7 +127,7 @@ $(document).ready(function()
 					},
 					function(data, status)
 					{
-            var message =selectedModifyTaskName+" "+data;
+						var message =selectedModifyTaskName+" "+data;
 						updateLogArea(message);
 						//alert(selectedModifyTaskName+" "+data);
 						refreshListOfTask();
@@ -136,8 +136,8 @@ $(document).ready(function()
 				}
 				else
 				{
-          var message ="Please select one of the task to be modified.";
-          updateLogArea(message);
+					  var message ="Please select one of the task to be modified.";
+					  updateLogArea(message);
 				}
 			}
 			else 							   //modify action
@@ -152,9 +152,9 @@ $(document).ready(function()
 					{
 						$("#newTaskName").val("");
 						$("#modifyTask").removeAttr('disabled');
-      			$("#modifyTask").css("color", "white");
-            var message =newTaskName+" "+data;
-            updateLogArea(message);
+						$("#modifyTask").css("color", "white");
+						var message =newTaskName+" "+data;
+						updateLogArea(message);
 						refreshListOfTask();
 					}
 				);
@@ -216,14 +216,23 @@ function refreshParentID()
 //update status when mark/unmark status
 function changeStatus(checkBox) {
   var temp = checkBox.value;
-  var arrValue = temp.split("-");
+  var arrValue = temp.split("-");  
+  var status = 0;
   if(checkBox.checked==true)
   {
-	  updateStatus(arrValue[0],2); 		//update to COMPLETED
+	  if(arrValue[2]=='parent')
+	  {
+		  status = 1;						//update to DONE
+	  }
+	  else
+	  {
+		  status = 2;						//update to COMPLETED
+	  }
+	  updateStatus(arrValue[0],status); 		
   }
   else
   {
-	  updateStatus(arrValue[0],0);		//update to IN PROGRESS
+	  updateStatus(arrValue[0],status);		//update to IN PROGRESS
   }
 }
 
@@ -240,6 +249,7 @@ function updateStatus(selectedID, selectedStatus)
 		{
 			if(status=="success")
 			{
+				updateLogArea("["+selectedID+"]"+data);
 				refreshListViewTask();
 			}
 		}
@@ -262,6 +272,7 @@ function changeTitle(header,e, selectedID)
 		{
 			if(status=="success")
 			{
+				updateLogArea(data);
 				refreshListOfTask();
 			}
 		}

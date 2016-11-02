@@ -1,6 +1,5 @@
 <?php
 $conn;
-
 $action = $_REQUEST['action'];
 //main menu
 switch ($action) {
@@ -9,40 +8,33 @@ switch ($action) {
 		$parentTaskID=$_REQUEST['parentTaskID'];
 		echo insert($taskName,$parentTaskID);
 		break;
-
 	case "SELECT_ALL":
 		$taskID=$_REQUEST['taskID'];
 		return selectAll($taskID);
 		break;
-
 	case "MODIFY":
 		$modifyTaskID=$_REQUEST['modifyTaskID'];
 		$parentTaskID=$_REQUEST['parentTaskID'];
 		return modifyTaskParent($modifyTaskID,$parentTaskID);
 		break;
-
 	case "SHOW_FLAT_LIST":
 		$status=$_REQUEST['status'];
 		return showFlatList($status);
 		break;
-
 	case "SHOW_NESTED_LIST":
 		$status=$_REQUEST['status'];
 		return showNestedHierarchyList($status);
 		break;
-
 	case "UPDATE_TASK_STATUS":
 		$id=$_REQUEST['id'];
 		$status=$_REQUEST['status'];
 		return updateTaskStatus($id,$status);
 		break;
-
 	case "UPDATE_TASK_NAME":
 		$id=$_REQUEST['id'];
 		$taskName=$_REQUEST['taskName'];
 		return updateTaskName($id,$taskName);
 		break;
-
 	default:
 		echo "Invalid action request!";
 		break;
@@ -54,24 +46,20 @@ function connectDB()
 	$username = "root";
 	$password = "";
 	$dbname = "test";
-
 	// Create connection
 	global $conn;
 	$conn = mysqli_connect($servername, $username, $password, $dbname);
-
 	// Check connection
 	if (!$conn)
 	{
 		die("Connection failed: " . mysqli_connect_error());
 	}
 }
-
 function closeDB()
 {
 	global $conn;
 	mysqli_close($conn);
 }
-
 //create new task
 function insert($taskName,$parentTaskID)
 {
@@ -81,15 +69,20 @@ function insert($taskName,$parentTaskID)
 	$result = mysqli_query($conn,$sql);
 	if ($result)
 	{
-		echo "Sucessfully Created!";
+		$sql2 = "select max(id) id, status from tasks where title='".$taskName."' and parent_id = '".$parentTaskID."';";
+		$result2 = mysqli_query($conn,$sql2);		
+		closeDB();
+		while($row = mysqli_fetch_assoc($result2))
+		{			
+			echo "Sucessfully Created! ".$row["id"];
+			updateTaskStatus($row["id"],$row["status"]);
+		}
 	}
 	else
 	{
 		echo "Failed!";
 	}
-	closeDB();
 }
-
 //get all the task details
 function selectAll($taskID)
 {
@@ -112,13 +105,11 @@ function selectAll($taskID)
 	closeDB();
 	echo $finalResult;
 }
-
 //update parent of certain task, and update parent status if any
 function modifyTaskParent($modifyTaskID,$parentTaskID)
 {
 	global $conn;
 	connectDB();
-
 	//check down the trees to check the circular dependencies
 	$found = checkDownTree($modifyTaskID,$parentTaskID);
 	if($found)
@@ -135,17 +126,29 @@ function modifyTaskParent($modifyTaskID,$parentTaskID)
 		{
 			$oldParentID = $row["parent_id"];
 		}
-
+		
+		//get the status of the former parent
+		$sql = "SELECT title, status FROM `tasks` WHERE id = '".$oldParentID."'";
+		$result = mysqli_query($conn,$sql);
+		$oldParentStatus = 0;
+		$oldParentTitle = 0;
+		while($row = mysqli_fetch_assoc($result))
+		{
+			$oldParentStatus = $row["status"];
+			$oldParentTitle = $row["title"];
+		}
+		
 		//update to the new parent_id
 		$sql = "update tasks set parent_id=".$parentTaskID." where id = ".$modifyTaskID;
 		$result = mysqli_query($conn,$sql);
-
+		
 		//search the former siblings
 		$sql2 = "select id, title, status from tasks where parent_id = '".$oldParentID."' LIMIT 1";
 		$result2 = mysqli_query($conn,$sql2);
 		$oldSiblingID = 0;
 		$oldSiblingTitle = "";
 		$oldSiblingStatus = 0;
+		
 		if (mysqli_num_rows($result2) > 0)
 		{
 			while($row2 = mysqli_fetch_assoc($result2))
@@ -155,7 +158,6 @@ function modifyTaskParent($modifyTaskID,$parentTaskID)
 				$oldSiblingStatus = $row2["status"];
 			}
 		}
-
 		if ($result)
 		{
 			$sql = "select status from tasks where id = ".$modifyTaskID;
@@ -165,12 +167,19 @@ function modifyTaskParent($modifyTaskID,$parentTaskID)
 			{
 				updateTaskStatus($modifyTaskID,$row["status"]);				//update the whole new family
 			}
-
-
 			if($oldSiblingID!=0)
 			{
-				echo "Got siblings : [".$oldSiblingID."] - ".$oldSiblingTitle." ";
+				echo "Got siblings : [".$oldSiblingID."] - ".$oldSiblingTitle."; ";
 				updateTaskStatus($oldSiblingID,$oldSiblingStatus);			//update the whole old family if any
+			}
+			else
+			{
+				if($oldParentStatus==1)
+				{
+					//update the status of former parent from DONE to COMPLETED
+					echo "Doesn't have any siblings, update the status of the parent [".$oldParentID."] - ".$oldParentTitle." and the rest of family; ";
+					updateTaskStatus($oldParentID,2);					
+				}
 			}
 		}
 		else
@@ -178,9 +187,7 @@ function modifyTaskParent($modifyTaskID,$parentTaskID)
 			echo " is Failed!";
 		}
 	}
-
 }
-
 //recursive function to find the circular dependencies
 function checkDownTree($modifyTaskID,$parentTaskID)
 {
@@ -213,7 +220,6 @@ function checkDownTree($modifyTaskID,$parentTaskID)
 			return $found;
 		}
 }
-
 //to print the task list in flat mode
 function showFlatList($status)
 {
@@ -251,7 +257,6 @@ function showFlatList($status)
 	}
 	closeDB();
 }
-
 //update the status of the selected id and the whole family related to it.
 function updateTaskStatus($id,$status)
 {
@@ -262,7 +267,7 @@ function updateTaskStatus($id,$status)
 	if ($result)
 	{
 		updateParentTaskStatus($id);
-		echo "Sucessfully Updated!; ";
+		echo "'s family sucessfully Updated!; "; 
 	}
 	else
 	{
@@ -270,7 +275,6 @@ function updateTaskStatus($id,$status)
 	}
 	closeDB();
 }
-
 //update the whole family related to the selected id
 function updateParentTaskStatus($id)
 {
@@ -286,7 +290,7 @@ function updateParentTaskStatus($id)
 			$result2 = mysqli_query($conn,$sql2);
 			{
 				while($row2 = mysqli_fetch_assoc($result2))
-				{
+				{					
 					$newStatus=0;
 					if($row2["avg"]==2)
 					{
@@ -300,15 +304,24 @@ function updateParentTaskStatus($id)
 					{
 						$newStatus=0;
 					}
+					$sql3 = "select status from tasks where id = ".$parent_id;
+					$result3 = mysqli_query($conn,$sql3);
+					while($row3 = mysqli_fetch_assoc($result3))
+					{
+						if($row3["status"]!=0 && $newStatus==0)									//if parent is COMPLETED, need to change to DONE
+						{
+							$newStatus=1;
+						}
+					}
+					
+					$sql3 = "update tasks set status = ".$newStatus." where id = ".$parent_id;
+					$result3 = mysqli_query($conn,$sql3);						
 				}
-				$sql3 = "update tasks set status = ".$newStatus." where id = ".$parent_id;
-				$result3 = mysqli_query($conn,$sql3);
 			}
 			updateParentTaskStatus($parent_id);
 		}
 	}
 }
-
 //to print the task list in nested hierarchy mode
 function showNestedHierarchyList($status)
 {
@@ -336,7 +349,6 @@ function showNestedHierarchyList($status)
 	}
 	closeDB();
 }
-
 //drill down every single of task and form it into nested hierarchy form
 function checkNestedList($id, $title, $status, $parent_id, $statusFilter)
 {
@@ -361,12 +373,20 @@ function checkNestedList($id, $title, $status, $parent_id, $statusFilter)
 			$tempResult .=$arrOutput[3];
 		}
 		$statusValue = translateStatus($status);
+		$checked = "checked";
+		$disabled = "disabled";
+		$statusValue = translateStatus($status);
+		if($statusValue=="IN PROGRESS")
+		{
+			$checked ="";
+			$disabled = "";
+		}
 		$opacity = "";
 		if($statusFilter!=99 AND $statusFilter!=$status)
 		{
 			$opacity = "Filtered";
 		}
-		$finalResult .="<li>[".$id."] <h id='statusValue".$status.$opacity."'><h id='editableTaskName' contenteditable='true' onkeypress='changeTitle(this, event,".$id.")' >".$title."</h> (Total Dependencies = ".$countDependencies.", Total Done = ".$countDone.", Total Completed = ".$countComplete.") - ".$statusValue."</h></li>";
+		$finalResult .="<li>[".$id."] <h id='statusValue".$status.$opacity."'><h id='editableTaskName' contenteditable='true' onkeypress='changeTitle(this, event,".$id.")' >".$title."</h> (Total Dependencies = ".$countDependencies.", Total Done = ".$countDone.", Total Completed = ".$countComplete.") <input onclick='changeStatus(this)' type='checkbox' id='checkBoxStat' name='status' ".$disabled." value='".$id."-".$status."-parent' ".$checked.">- ".$statusValue."</h></li>";
 		$finalResult .="<ul>".$tempResult."</ul>";
 		if($status=='1')
 		{
@@ -388,7 +408,6 @@ function checkNestedList($id, $title, $status, $parent_id, $statusFilter)
 		{
 			$countComplete++;
 		}
-
 		$checked = "checked";
 		$statusValue = translateStatus($status);
 		if($statusValue=="IN PROGRESS")
@@ -400,10 +419,9 @@ function checkNestedList($id, $title, $status, $parent_id, $statusFilter)
 		{
 			$opacity = "Filtered";
 		}
-		return $countDependencies."|".$countDone."|".$countComplete."|<li>[".$id."] <h id='statusValue".$status.$opacity."'><h id='editableTaskName' contenteditable='true' onkeypress='changeTitle(this, event,".$id.")' >".$title."</h> <input onclick='changeStatus(this)' type='checkbox' id='checkBoxStat' name='status' value='".$id."-".$status."' ".$checked.">- ".$statusValue."</h></li>";
+		return $countDependencies."|".$countDone."|".$countComplete."|<li>[".$id."] <h id='statusValue".$status.$opacity."'><h id='editableTaskName' contenteditable='true' onkeypress='changeTitle(this, event,".$id.")' >".$title."</h> <input onclick='changeStatus(this)' type='checkbox' id='checkBoxStat' name='status' value='".$id."-".$status."-child' ".$checked.">- ".$statusValue."</h></li>";
 	}
 }
-
 function translateStatus($status)
 {
 	if($status==0)
@@ -419,7 +437,6 @@ function translateStatus($status)
 		return "COMPLETED";
 	}
 }
-
 //rename the title of the task
 function updateTaskName($id,$taskName)
 {
@@ -429,7 +446,7 @@ function updateTaskName($id,$taskName)
 	$result = mysqli_query($conn,$sql);
 	if ($result)
 	{
-		echo "Sucessfully Updated!";
+		echo "[".$id."] Sucessfully Renamed to '".$taskName."'!";
 	}
 	else
 	{

@@ -20,9 +20,8 @@ How to rename the task name:
  - After change you have to press ENTER key to reflect the changes.
 
 This application created with assumptions below:
- - Parent Task cannot change its status, hence there is no checkbox in the Parent Task level.
+ - Parent Task cannot change its status from DONE/COMPLETED into IN PROGRESS, hence the user can't unmark the checkbox at Parent Task level.
    Reason : if able to change the status, what happened to its children if the Status of the parent is COMPLETED and unmark into DONE? which children need to update into IN PROGRESS?
- - Only child/independent task can change the status
- - When you filtered to certain status, you still can see and unmark/mark the other's status.
+  - When you filtered to certain status, you still can see and unmark/mark the other's status.
 
 Thank You!
